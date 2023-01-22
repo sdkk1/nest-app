@@ -1,43 +1,38 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { v4 as uuid } from 'uuid';
-
 import { CreateItemDto } from './dto/create-item.dto';
 import { ItemStatus } from './item-status.enum';
-import { Item } from './item.model';
+import { Item } from '../entities/item.entity';
+import { ItemRepository } from './item.repository';
 
 @Injectable()
 export class ItemsService {
-  private items: Item[] = [];
+  constructor(private readonly itemRepository: ItemRepository) {}
 
-  findAll(): Item[] {
-    return this.items;
+  async findAll(): Promise<Item[]> {
+    return await this.itemRepository.find();
   }
 
-  findById(id: string): Item {
-    const foundItem = this.items.find((item) => item.id === id);
-    if (!foundItem) {
+  async findById(id: string): Promise<Item> {
+    const found = await this.itemRepository.findOne(id);
+    if (!found) {
       throw new NotFoundException();
     }
-    return foundItem;
+    return found;
   }
 
-  create(createItemDto: CreateItemDto): Item {
-    const item: Item = {
-      id: uuid(),
-      ...createItemDto,
-      status: ItemStatus.ON_SALE,
-    };
-    this.items.push(item);
-    return item;
+  async create(createItemDto: CreateItemDto): Promise<Item> {
+    return await this.itemRepository.createItem(createItemDto);
   }
 
-  updateStatus(id: string): Item {
-    const item = this.findById(id);
+  async updateStatus(id: string): Promise<Item> {
+    const item = await this.findById(id);
     item.status = ItemStatus.SOLD_OUT;
+    item.updatedAt = new Date().toISOString();
+    await this.itemRepository.save(item);
     return item;
   }
 
-  delete(id: string): void {
-    this.items = this.items.filter((item) => item.id !== id);
+  async delete(id: string): Promise<void> {
+    await this.itemRepository.delete(id);
   }
 }
