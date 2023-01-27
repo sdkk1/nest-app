@@ -1,7 +1,7 @@
 import { genSalt, hash } from 'bcrypt';
 import { EntityRepository, Repository } from 'typeorm';
 
-import { User } from 'src/entities/user.entity';
+import { User } from '../entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 
 @EntityRepository(User)
